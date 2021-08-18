@@ -12,6 +12,14 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
+  <depend>class_loader</depend>
+  <depend>costmap_converter_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>tf2</depend>
+  <depend>rclcpp</depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
