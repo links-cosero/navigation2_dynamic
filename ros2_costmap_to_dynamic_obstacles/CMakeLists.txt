@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav2_dynamic_msgs REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -29,6 +30,7 @@ find_package(rclcpp REQUIRED)
 set(dependencies
     class_loader
     #costmap_converter_msgs
+    nav2_dynamic_msgs
     cv_bridge
     geometry_msgs
     nav2_costmap_2d
