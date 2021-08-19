@@ -28,7 +28,7 @@ find_package(rclcpp REQUIRED)
 
 set(dependencies
     class_loader
-    costmap_converter_msgs
+    #costmap_converter_msgs
     cv_bridge
     geometry_msgs
     nav2_costmap_2d
@@ -48,6 +48,37 @@ add_library(ros2_costmap_to_dynamic_obstacles SHARED
   src/background_subtractor.cpp 
   src/blob_detector.cpp
 )
+
+ament_target_dependencies(ros2_costmap_to_dynamic_obstacles 
+    ${dependencies}
+)
+
+# Remember when running the converter node through ros2 run, it will be called: "my_converter_node"
+add_executable(my_converter_node src/costmap_converter_node.cpp)
+
+target_link_libraries(my_converter_node
+ros2_costmap_to_dynamic_obstacles
+)
+ament_target_dependencies(my_converter_node
+  ${dependencies}
+)
+
+
+install(TARGETS ros2_costmap_to_dynamic_obstacles
+   DESTINATION lib
+)
+install(TARGETS my_converter_node
+   DESTINATION lib/${PROJECT_NAME}      # changed from DESTINATION bin
+)
+
+install(DIRECTORY include/
+   DESTINATION include/
+)
+
+ament_export_include_directories(include)
+ament_export_libraries(ros2_costmap_to_dynamic_obstacles)
+ament_export_dependencies(${dependencies})
+
 
 
 if(BUILD_TESTING)

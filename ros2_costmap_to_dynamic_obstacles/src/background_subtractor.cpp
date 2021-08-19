@@ -6,8 +6,9 @@
 */
 
 
+#include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//#include <opencv2/cvv/cvv.hpp>
+#include <opencv2/cvv/cvv.hpp>
 #include <ros2_costmap_to_dynamic_obstacles/background_subtractor.h>
 
 BackgroundSubtractor::BackgroundSubtractor(const Params &parameters): params_(parameters)
