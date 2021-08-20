@@ -26,6 +26,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 
 set(dependencies
     class_loader
@@ -40,6 +41,7 @@ set(dependencies
     OpenCV
     pluginlib
     rclcpp
+    rclcpp_lifecycle
 )
 
 include_directories(

@@ -6,6 +6,9 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <pluginlib/class_loader.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <nav2_costmap_2d/costmap_2d.hpp>
+#include <nav2_costmap_2d/costmap_2d_ros.hpp>
 
 // OpenCV
 #include <cv_bridge/cv_bridge.h>
@@ -23,9 +26,50 @@
 // STL
 #include <memory>
 
+namespace my_costmap_converter
+{
 
+    class CostmapToDynamicObstacles
+    {
+    public:
+        /**
+   * @brief Constructor
+   */
+        CostmapToDynamicObstacles();
 
+        /**
+   * @brief Destructor
+   */
+        virtual ~CostmapToDynamicObstacles();
 
+        /**
+   * @brief Initialize the parameter for background subtractor and blob detector
+   */
+        virtual void initialize();
 
+        /**
+   * @brief Pass a pointer to the costmap to the plugin.
+   * @sa updateCostmap2D
+   * @param costmap Pointer to the costmap2d source
+   */
+        virtual void setCostmap2D(nav2_costmap_2d::Costmap2D *costmap);
+
+    private:
+        std::mutex mutex_;
+        nav2_costmap_2d::Costmap2D* costmap_;
+        cv::Mat costmap_mat_;
+        // ObstacleArrayPtr obstacles_;
+        cv::Mat fg_mask_;
+        std::unique_ptr<BackgroundSubtractor> bg_sub_;
+        cv::Ptr<BlobDetector> blob_det_;
+        //   std::vector<cv::KeyPoint> keypoints_;
+        //   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+        //   Point_t ego_vel_;
+
+        //   std::string odom_topic_ = "/odom";
+        //   bool publish_static_obstacles_ = true;
+    }
+
+}
 
 #endif /* COSTMAP_TO_DYNAMIC_OBSTACLES_H_ */

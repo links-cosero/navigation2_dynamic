@@ -8,10 +8,11 @@ Finally it should publish an ObstacleArray message to the f_hungarian_tracker
 
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <nav2_costmap_2d/costmap_2d.hpp>
+#include <nav2_costmap_2d/costmap_2d_ros.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-//#include <costmap_converter/costmap_converter_interface.h>
+#include <ros2_costmap_to_dynamic_obstacles/costmap_to_dynamic_obstalces.h>
 #include <pluginlib/class_loader.hpp>
 
 
@@ -47,7 +48,7 @@ class CostmapConversionNode : public rclcpp::Node {
         create_publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>(
             detection_topic, 1000);
 
-    // Parametre for??? Is it useful for bacgound subtractor?? --> Verify
+    // Parameter for??? Is it useful for bacgound subtractor?? --> Verify
     occupied_min_value_ = 100;
     declare_parameter("occupied_min_value",
                       rclcpp::ParameterValue(occupied_min_value_));
@@ -58,14 +59,15 @@ class CostmapConversionNode : public rclcpp::Node {
     declare_parameter("odom_topic", rclcpp::ParameterValue(odom_topic));
     get_parameter_or<std::string>("odom_topic", odom_topic, odom_topic);
 
-    // Understand if it is necessary
-    if (converter_) {
-      converter_->setOdomTopic(odom_topic);
-      converter_->initialize(
-          std::make_shared<rclcpp::Node>("intra_node", "costmap_converter"));
-      converter_->startWorker(std::make_shared<rclcpp::Rate>(5),
-                              costmap_ros_->getCostmap(), true);
-    }
+    // Understand if it is necessary..   
+    // if (converter_) {
+    //   converter_->setOdomTopic(odom_topic);
+    //   converter_->initialize(
+    //       std::make_shared<rclcpp::Node>("intra_node", "costmap_converter"));
+    //   converter_->startWorker(std::make_shared<rclcpp::Rate>(5),
+    //                           costmap_ros_->getCostmap(), true);  // startWorker get a pointer to the costmap and defines the rate at which it must be
+    //                                                               // be updated.. so maybe we don't need since we don't update the costmap in this package
+    // }
 
     // Create timer for publishing on the /detection topic
     pub_timer_ = n_->create_wall_timer(
@@ -75,9 +77,11 @@ class CostmapConversionNode : public rclcpp::Node {
 
   // Callback to publish on the /detection topic
   void publishCallback() {
-    costmap_converter::ObstacleArrayConstPtr obstacles =
-        converter_->getObstacles();  // HERE CALL TO THE costmap_to_dynamic_obstacles
+    // costmap_converter::ObstacleArrayConstPtr obstacles =
+    //     converter_->getObstacles();  // HERE CALL TO THE costmap_to_dynamic_obstacles
                                      // METHODS TO ACTIVATE background_subtractor AND blob_detector
+                                     // REMEMBER TO PASS costmap_ros_ IN THE CALL
+    ros2_costmap_converter::CostmapTo costmap_ros
 
     if (!obstacles) return;
 
@@ -91,7 +95,7 @@ class CostmapConversionNode : public rclcpp::Node {
   // The following has been commented out, since it should only serve to
   // publish the costmap_converter results on rviz, we only need to publish on the 
   // /detection topic
-
+  #pragma region 
   // void publishAsMarker(
   //     const std::string &frame_id,
   //     const std::vector<geometry_msgs::msg::PolygonStamped> &polygonStamped) {
@@ -184,12 +188,14 @@ class CostmapConversionNode : public rclcpp::Node {
   //   }
   //   marker_pub_->publish(line_list);
   // }
+  #pragma endregion
+
 
  private:
-  // std::shared_ptr<costmap_converter::BaseCostmapToPolygons> converter_;
+  std::shared_ptr<my_costmap_converter::CostmapToDynamicObstacles> converter_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<std::thread> costmap_thread_;
-  rclcpp::Publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>::SharedPtr
+  rclcpp::Publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>::SharedPtr  // Change with message of nav2_dynamic_msgs
       obstacle_pub_;
   // rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
   rclcpp::TimerBase::SharedPtr pub_timer_;
