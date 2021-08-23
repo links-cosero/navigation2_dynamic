@@ -14,6 +14,13 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/video/tracking.hpp>
+// From defines.h definition of this type, used for the ego velocity.. Is it correct defining it here?
+#pragma once
+#include <opencv2/opencv.hpp>
+
+typedef float track_t;
+typedef cv::Point3_<track_t> Point_t;
+#define Mat_t CV_32FC
 
 // dynamic reconfigure
 //#include <costmap_converter/CostmapToDynamicObstaclesConfig.h>
@@ -54,20 +61,29 @@ namespace my_costmap_converter
    */
         virtual void setCostmap2D(nav2_costmap_2d::Costmap2D *costmap);
 
-    private:
+   private:
         std::mutex mutex_;
-        nav2_costmap_2d::Costmap2D* costmap_;
+        nav2_costmap_2d::Costmap2D *costmap_;
         cv::Mat costmap_mat_;
         // ObstacleArrayPtr obstacles_;
         cv::Mat fg_mask_;
         std::unique_ptr<BackgroundSubtractor> bg_sub_;
         cv::Ptr<BlobDetector> blob_det_;
-        //   std::vector<cv::KeyPoint> keypoints_;
-        //   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-        //   Point_t ego_vel_;
+        std::vector<cv::KeyPoint> keypoints_;
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+        Point_t ego_vel_;
 
-        //   std::string odom_topic_ = "/odom";
+        std::string odom_topic_ = "/odom";
         //   bool publish_static_obstacles_ = true;
+
+
+        /**
+        * @brief Callback for the odometry messages of the observing robot.
+        *
+        * Used to convert the velocity of obstacles to the /map frame.
+        * @param msg The Pointer to the nav_msgs::Odometry of the observing robot
+        */
+        void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
     }
 
 }

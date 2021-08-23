@@ -10,6 +10,11 @@
 
 void CostmapToDynamicObstacles::initialize()
 {
+  // We need the odometry from the robot to compensate the ego motion
+  odom_sub_ = nh->create_subscription<nav_msgs::msg::Odometry>(
+              odom_topic_,
+              rclcpp::SystemDefaultsQoS(),
+              std::bind(&CostmapToDynamicObstacles::odomCallback, this, std::placeholders::_1));
 
   //////////////////////////////////  Foreground detection parameters  //////////////////////////////////
 #pragma region
@@ -102,8 +107,6 @@ void CostmapToDynamicObstacles::compute()
   if (costmap_mat_.empty())   // Is needed??
     return;
 
-  this->initialize();
-
   /////////////////////////// Foreground detection ////////////////////////////////////
   // Dynamic obstacles are separated from static obstacles
   int origin_x = round(costmap_->getOriginX() / costmap_->getResolution());
@@ -126,8 +129,17 @@ void CostmapToDynamicObstacles::compute()
     bg_mat = costmap_mat_ - fg_mask_;
     // visualize("bg_mat", bg_mat);
   }
-}
 
+
+  /////////////////////////////// Blob detection /////////////////////////////////////
+  // Centers and contours of Blobs are detected
+  blob_det_->detect(fg_mask_, keypoints_);  //std::vector<cv::KeyPoint> keypoints_; (in header file) is a vector of cv::KeyPoint data struct https://docs.opencv.org/4.5.2/d2/d29/classcv_1_1KeyPoint.html#details
+  std::vector<std::vector<cv::Point>> contours = blob_det_->getContours();
+
+  //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
+  // here?
+
+}
 
 
 void CostmapToDynamicObstacles::setCostmap2D(nav2_costmap_2d::Costmap2D* costmap)     
@@ -154,4 +166,26 @@ void CostmapToDynamicObstacles::updateCostmap2D()
   //                      costmap_->getCharMap()).clone(); // Deep copy: TODO
   costmap_mat_ = cv::Mat(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), CV_8UC1,
                         costmap_->getCharMap());          // CV_8UC1 is the array type: a 8-bit single channel image. 
+}
+
+
+void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg)     // callback function for the subscriber to the odom topic in the initilize() method
+{
+  RCLCPP_INFO_ONCE(getLogger(), "CostmapToDynamicObstacles: odom received.");
+
+  tf2::Quaternion pose;
+  tf2::fromMsg(msg->pose.pose.orientation, pose);
+
+  tf2::Vector3 twistLinear;
+  // tf2::fromMsg(msg->twist.twist.linear, twistLinear); // not available in tf2
+  twistLinear.setX(msg->twist.twist.linear.x);
+  twistLinear.setY(msg->twist.twist.linear.y);
+  twistLinear.setZ(msg->twist.twist.linear.z);
+
+
+  // velocity of the robot in x, y and z coordinates
+  tf2::Vector3 vel = tf2::quatRotate(pose, twistLinear);
+  ego_vel_.x = vel.x();
+  ego_vel_.y = vel.y();
+  ego_vel_.z = vel.z();
 }

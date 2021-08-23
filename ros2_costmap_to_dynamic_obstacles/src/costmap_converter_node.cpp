@@ -31,6 +31,9 @@ class CostmapConversionNode : public rclcpp::Node {
     costmap_ros_->on_configure(state);
     costmap_ros_->on_activate(state);
 
+    // Create a pointer to this node
+    n_ = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
+
     RCLCPP_INFO(get_logger(), "Created pointer to the costmap");
     
     // The kf_hungarian_node subscribes to the /detection topic, from which
@@ -69,6 +72,14 @@ class CostmapConversionNode : public rclcpp::Node {
     //                                                               // be updated.. so maybe we don't need since we don't update the costmap in this package
     // }
 
+    // do conversion here: call to costmap_to_dynamic_obstacles in order to activate
+    // background_subtractor and blob_detector
+    converter_ =
+        std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>("converter");
+    
+    converter_->initialize()
+    converter_->compute()
+
     // Create timer for publishing on the /detection topic
     pub_timer_ = n_->create_wall_timer(
         std::chrono::milliseconds(200),
@@ -78,16 +89,13 @@ class CostmapConversionNode : public rclcpp::Node {
   // Callback to publish on the /detection topic
   void publishCallback() {
     // costmap_converter::ObstacleArrayConstPtr obstacles =
-    //     converter_->getObstacles();  // HERE CALL TO THE costmap_to_dynamic_obstacles
-                                     // METHODS TO ACTIVATE background_subtractor AND blob_detector
-                                     // REMEMBER TO PASS costmap_ros_ IN THE CALL
-    ros2_costmap_converter::CostmapTo costmap_ros
+    //     converter_->getObstacles();  // HERE PUBLISH THE MESSAGE AS DEFINED IN nav2_dynamic_msgs 
 
-    if (!obstacles) return;
+    // if (!obstacles) return;
 
-    obstacle_pub_->publish(*obstacles);
+    // obstacle_pub_->publish(*obstacles);
 
-    frame_id_ = costmap_ros_->getGlobalFrameID();
+    // frame_id_ = costmap_ros_->getGlobalFrameID();
 
     // publishAsMarker(frame_id_, *obstacles);
   }
@@ -192,6 +200,7 @@ class CostmapConversionNode : public rclcpp::Node {
 
 
  private:
+  rclcpp::Node::SharedPtr n_;
   std::shared_ptr<my_costmap_converter::CostmapToDynamicObstacles> converter_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<std::thread> costmap_thread_;

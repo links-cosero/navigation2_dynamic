@@ -51,6 +51,7 @@ include_directories(
 add_library(ros2_costmap_to_dynamic_obstacles SHARED
   src/background_subtractor.cpp 
   src/blob_detector.cpp
+  costmap_to_dynamic_obstalces.cpp
 )
 
 ament_target_dependencies(ros2_costmap_to_dynamic_obstacles 
