@@ -8,6 +8,14 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+
+CostmapToDynamicObstacles::CostmapToDynamicObstacles()
+{
+  ego_vel_.x = ego_vel_.y = ego_vel_.z = 0;
+  costmap_ = nullptr;
+}
+
+
 void CostmapToDynamicObstacles::initialize()
 {
   // We need the odometry from the robot to compensate the ego motion
