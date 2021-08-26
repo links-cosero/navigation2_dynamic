@@ -39,10 +39,6 @@ namespace my_costmap_converter
     class CostmapToDynamicObstacles
     {
     public:
-        /**
-   * @brief Constructor
-   */
-        CostmapToDynamicObstacles();
 
         /**
    * @brief Destructor
@@ -50,9 +46,10 @@ namespace my_costmap_converter
         virtual ~CostmapToDynamicObstacles();
 
         /**
-   * @brief Initialize the parameter for background subtractor and blob detector
+   * @brief Initialize the plugin
+   * @param nh Nodehandle that defines the namespace for parameters
    */
-        virtual void initialize();
+        virtual void initialize(rclcpp::Node::SharedPtr nh);
 
         /**
    * @brief Pass a pointer to the costmap to the plugin.
@@ -84,7 +81,7 @@ namespace my_costmap_converter
         * @param msg The Pointer to the nav_msgs::Odometry of the observing robot
         */
         void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
-    }
+    };
 
 }
 

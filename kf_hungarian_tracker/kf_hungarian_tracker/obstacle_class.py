@@ -1,5 +1,5 @@
 import numpy as np 
-import cv2
+import cv2 as cv
 import uuid 
 from unique_identifier_msgs.msg import UUID
 
@@ -11,7 +11,7 @@ class ObstacleClass:
     Arrtibutes:
         position: 3d position of center point, numpy array with shape (3, 1)
         velocity: 3d velocity of center point, numpy array with shape (3, 1)
-        kalman: cv2.KalmanFilter
+        kalman: cv.KalmanFilter
         dying: count missing frames for this obstacle, if reach threshold, delete this obstacle
     """
 
@@ -34,7 +34,7 @@ class ObstacleClass:
             process_noise_cov[2] = 0.
 
         # setup kalman filter
-        self.kalman = cv2.KalmanFilter(6,3) # 3d by default, 6d state space and 3d observation space
+        self.kalman = cv.KalmanFilter(6,3) # 3d by default, 6d state space and 3d observation space
         self.kalman.measurementMatrix = np.array([[1,0,0,0,0,0], [0,1,0,0,0,0], [0,0,1,0,0,0]], np.float32)
         self.kalman.measurementNoiseCov = np.diag(measurement_noise_cov).astype(np.float32)
         self.kalman.statePost = np.concatenate([position, velocity]).astype(np.float32)

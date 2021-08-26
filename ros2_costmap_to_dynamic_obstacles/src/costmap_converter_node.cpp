@@ -13,7 +13,7 @@ Finally it should publish an ObstacleArray message to the f_hungarian_tracker
 #include <visualization_msgs/msg/marker.hpp>
 
 #include <ros2_costmap_to_dynamic_obstacles/costmap_to_dynamic_obstalces.h>
-#include <pluginlib/class_loader.hpp>
+// #include <pluginlib/class_loader.hpp>
 
 
 class CostmapConversionNode : public rclcpp::Node {
@@ -51,7 +51,7 @@ class CostmapConversionNode : public rclcpp::Node {
         create_publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>(
             detection_topic, 1000);
 
-    // Parameter for??? Is it useful for bacgound subtractor?? --> Verify
+    // Parameter for??? Is it useful for backgound subtractor?? --> Verify
     occupied_min_value_ = 100;
     declare_parameter("occupied_min_value",
                       rclcpp::ParameterValue(occupied_min_value_));
@@ -77,8 +77,10 @@ class CostmapConversionNode : public rclcpp::Node {
     converter_ =
         std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>("converter");
     
-    converter_->initialize()
-    converter_->compute()
+      // Set the costmap and translate it to an openCV object
+    converter_->initialize(std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter"));  // è necessario creare un nodo per il costmap converter?
+    converter_->setCostmap2D(costmap_ros_->getCostmap());
+    converter_->compute();
 
     // Create timer for publishing on the /detection topic
     pub_timer_ = n_->create_wall_timer(

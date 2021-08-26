@@ -8,16 +8,15 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-
-CostmapToDynamicObstacles::CostmapToDynamicObstacles()
+namespace my_costmap_converter
 {
+
+void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
+{
+
   ego_vel_.x = ego_vel_.y = ego_vel_.z = 0;
   costmap_ = nullptr;
-}
 
-
-void CostmapToDynamicObstacles::initialize()
-{
   // We need the odometry from the robot to compensate the ego motion
   odom_sub_ = nh->create_subscription<nav_msgs::msg::Odometry>(
               odom_topic_,
@@ -105,9 +104,6 @@ void CostmapToDynamicObstacles::initialize()
   blob_det_ = BlobDetector::create(blob_det_params);
 #pragma endregion
   
-  // Set the costmap and translate it to an openCV object
-  this->setCostmap2D();
-
 }
 
 void CostmapToDynamicObstacles::compute()
@@ -130,19 +126,12 @@ void CostmapToDynamicObstacles::compute()
   if (fg_mask_.empty())
     return;
 
-  cv::Mat bg_mat;
-  if (publish_static_obstacles_)
-  {
-    // Get static obstacles
-    bg_mat = costmap_mat_ - fg_mask_;
-    // visualize("bg_mat", bg_mat);
-  }
 
 
   /////////////////////////////// Blob detection /////////////////////////////////////
   // Centers and contours of Blobs are detected
   blob_det_->detect(fg_mask_, keypoints_);  //std::vector<cv::KeyPoint> keypoints_; (in header file) is a vector of cv::KeyPoint data struct https://docs.opencv.org/4.5.2/d2/d29/classcv_1_1KeyPoint.html#details
-  std::vector<std::vector<cv::Point>> contours = blob_det_->getContours();
+  std::vector<std::vector<cv::Point>> contours = blob_det_->getContours();  // try to change this getContours() to get the centers and size of blobs
 
   //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
   // here?
@@ -196,4 +185,6 @@ void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::Cons
   ego_vel_.x = vel.x();
   ego_vel_.y = vel.y();
   ego_vel_.z = vel.z();
+}
+
 }
