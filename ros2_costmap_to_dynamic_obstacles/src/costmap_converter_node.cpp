@@ -90,12 +90,12 @@ class CostmapConversionNode : public rclcpp::Node {
 
   // Callback to publish on the /detection topic
   void publishCallback() {
-    // costmap_converter::ObstacleArrayConstPtr obstacles =
-    //     converter_->getObstacles();  // HERE PUBLISH THE MESSAGE AS DEFINED IN nav2_dynamic_msgs 
+    my_costmap_converter::ObstacleArrayPtr obstacles =
+         converter_->getObstacles();  // HERE PUBLISH THE MESSAGE AS DEFINED IN nav2_dynamic_msgs 
 
-    // if (!obstacles) return;
+    if (!obstacles) return;
 
-    // obstacle_pub_->publish(*obstacles);
+    obstacle_pub_->publish(*obstacles);
 
     // frame_id_ = costmap_ros_->getGlobalFrameID();
 
@@ -206,7 +206,7 @@ class CostmapConversionNode : public rclcpp::Node {
   std::shared_ptr<my_costmap_converter::CostmapToDynamicObstacles> converter_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<std::thread> costmap_thread_;
-  rclcpp::Publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>::SharedPtr  // Change with message of nav2_dynamic_msgs
+  rclcpp::Publisher<nav2_dynamic_msgs::msg::ObstacleArray>::SharedPtr 
       obstacle_pub_;
   // rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
   rclcpp::TimerBase::SharedPtr pub_timer_;

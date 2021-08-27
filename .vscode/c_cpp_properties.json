@@ -7,7 +7,8 @@
                 "/usr/include/opencv4/**",
                 "/opt/ros/foxy/include",
                 "${workspaceFolder}/ros2_costmap_to_dynamic_obstacles/include",
-                "~/nav2_ws/src/navigation2/nav2_costmap_2d/include"
+                "~/nav2_ws/src/navigation2/nav2_costmap_2d/include",
+                "/home/matteodr/ros2_ws/src/build/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

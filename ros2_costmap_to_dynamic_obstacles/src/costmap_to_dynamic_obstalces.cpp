@@ -7,6 +7,9 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <opencv2/imgproc.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace my_costmap_converter
 {
@@ -108,7 +111,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
 
 void CostmapToDynamicObstacles::compute()
 {
-  if (costmap_mat_.empty())   // Is needed??
+  if (costmap_mat_.empty())
     return;
 
   /////////////////////////// Foreground detection ////////////////////////////////////
@@ -127,16 +130,61 @@ void CostmapToDynamicObstacles::compute()
     return;
 
 
-
   /////////////////////////////// Blob detection /////////////////////////////////////
   // Centers and contours of Blobs are detected
   blob_det_->detect(fg_mask_, keypoints_);  //std::vector<cv::KeyPoint> keypoints_; (in header file) is a vector of cv::KeyPoint data struct https://docs.opencv.org/4.5.2/d2/d29/classcv_1_1KeyPoint.html#details
   std::vector<std::vector<cv::Point>> contours = blob_det_->getContours();  // try to change this getContours() to get the centers and size of blobs
 
-  //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
-  // here?
 
+  //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
+  ObstacleArrayPtr obstacles(new nav2_dynamic_msgs::msg::ObstacleArray);
+  // header.seq is automatically filled
+  obstacles->header.stamp = now();
+  obstacles->header.frame_id = "/map"; //Global frame /map  
+  
+  // Here use OpenCV to generate bounding boxes of the detected polygons
+  // This makes the obstacles detection less accurate, but the kf_hungarian_tracker needs rectangular
+  // shaped obstalces to work
+  std::vector<cv::Rect> boundRect( contours.size() );  // https://docs.opencv.org/4.5.2/d2/d44/classcv_1_1Rect__.html#a6fed06513cedd76652389e38c7b1222e
+  for (size_t i = 0; i < contours.size(); ++i)
+  {
+    // create a bounding box for each obstacle
+    boundRect[i] = boundingRect( contours[i] );
+
+    obstacles->obstacles.emplace_back();
+
+    // set obstacle ID (UUID)
+    unique_identifier_msgs::msg::UUID obstacle_ID;
+    boost::uuids::uuid u;
+    obstacle_ID = u;
+    obstacles->obstacles.back().uuid = obstacle_ID;
+
+    // convert bounding box to size
+    geometry_msgs::msg::Vector3 size;
+    size.x = boundRect[i].width;
+    size.y = boundRect[i].height;
+    size.z = 0;
+    obstacles->obstacles.back().size = size;
+
+    // set velocity to zero
+    geometry_msgs::msg::Vector3 velocity;
+    velocity.x, velocity.y, velocity.z = 0;
+    obstacles->obstacles.back().velocity = velocity;
+
+    // set the position (the center location)
+    geometry_msgs::msg::Point position;
+    position.at(i).x = keypoints_.at(i).pt.x;
+    position.at(i).y = keypoints_.at(i).pt.y;
+    position.at(i).z = 0; // Currently unused!
+    obstacles->obstacles.back().position = velocity;
+
+    // Set confidence to 1 for the moment
+    obstacles->obstacles.back().score = 1;
+  }
+
+  updateObstacleContainer(obstacles)
 }
+
 
 
 void CostmapToDynamicObstacles::setCostmap2D(nav2_costmap_2d::Costmap2D* costmap)     
@@ -165,6 +213,17 @@ void CostmapToDynamicObstacles::updateCostmap2D()
                         costmap_->getCharMap());          // CV_8UC1 is the array type: a 8-bit single channel image. 
 }
 
+ObstacleArrayConstPtr CostmapToDynamicObstacles::getObstacles()
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  return obstacles_;
+}
+
+void CostmapToDynamicObstacles::updateObstacleContainer(ObstacleArrayPtr obstacles)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  obstacles_ = obstacles;
+}
 
 void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg)     // callback function for the subscriber to the odom topic in the initilize() method
 {

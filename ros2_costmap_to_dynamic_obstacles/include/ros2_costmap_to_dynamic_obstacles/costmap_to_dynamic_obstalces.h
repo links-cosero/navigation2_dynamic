@@ -29,6 +29,7 @@ typedef cv::Point3_<track_t> Point_t;
 // Own includes
 #include <ros2_costmap_to_dynamic_obstacles/background_subtractor.h>
 #include <ros2_costmap_to_dynamic_obstacles/blob_detector.h>
+#include <nav2_dynamic_msgs/msg/obstacle_array.hpp>
 
 // STL
 #include <memory>
@@ -36,52 +37,75 @@ typedef cv::Point3_<track_t> Point_t;
 namespace my_costmap_converter
 {
 
-    class CostmapToDynamicObstacles
-    {
-    public:
+  //! Typedef for a shared dynamic obstacle container
+  typedef nav2_dynamic_msgs::msg::ObstacleArray::SharedPtr ObstacleArrayPtr;
 
-        /**
-   * @brief Destructor
-   */
-        virtual ~CostmapToDynamicObstacles();
+  class CostmapToDynamicObstacles
+  {
+  public:
+    /**
+      * @brief Destructor
+      */
+    virtual ~CostmapToDynamicObstacles();
 
-        /**
-   * @brief Initialize the plugin
-   * @param nh Nodehandle that defines the namespace for parameters
-   */
-        virtual void initialize(rclcpp::Node::SharedPtr nh);
+    /**
+      * @brief Initialize the plugin
+      * @param nh Nodehandle that defines the namespace for parameters
+      */
+    virtual void initialize(rclcpp::Node::SharedPtr nh);
 
-        /**
+    /**
+      * @brief This method performs the actual work (conversion of the costmap to
+      * obstacles)
+      */
+    virtual void compute();
+
+    /**
    * @brief Pass a pointer to the costmap to the plugin.
    * @sa updateCostmap2D
    * @param costmap Pointer to the costmap2d source
    */
-        virtual void setCostmap2D(nav2_costmap_2d::Costmap2D *costmap);
+    virtual void setCostmap2D(nav2_costmap_2d::Costmap2D *costmap);
 
-   private:
-        std::mutex mutex_;
-        nav2_costmap_2d::Costmap2D *costmap_;
-        cv::Mat costmap_mat_;
-        // ObstacleArrayPtr obstacles_;
-        cv::Mat fg_mask_;
-        std::unique_ptr<BackgroundSubtractor> bg_sub_;
-        cv::Ptr<BlobDetector> blob_det_;
-        std::vector<cv::KeyPoint> keypoints_;
-        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-        Point_t ego_vel_;
+   /**
+   * @brief Get a shared instance of the current obstacle container
+   * @remarks If compute() or startWorker() has not been called before, this
+   * method returns an empty instance!
+   * @return Shared instance of the current obstacle container
+   */
+    ObstacleArrayConstPtr getObstacles();
 
-        std::string odom_topic_ = "/odom";
-        //   bool publish_static_obstacles_ = true;
+    /**
+   * @brief Thread-safe update of the internal obstacle container (that is
+   * shared using getObstacles() from outside this
+   * class)
+   * @param obstacles Updated obstacle container
+   */
+    void updateObstacleContainer(ObstacleArrayPtr obstacles);
 
+  private:
+    std::mutex mutex_;
+    nav2_costmap_2d::Costmap2D *costmap_;
+    cv::Mat costmap_mat_;
+    ObstacleArrayPtr obstacles_;
+    cv::Mat fg_mask_;
+    std::unique_ptr<BackgroundSubtractor> bg_sub_;
+    cv::Ptr<BlobDetector> blob_det_;
+    std::vector<cv::KeyPoint> keypoints_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+    Point_t ego_vel_;
 
-        /**
+    std::string odom_topic_ = "/odom";
+    //   bool publish_static_obstacles_ = true;
+
+    /**
         * @brief Callback for the odometry messages of the observing robot.
         *
         * Used to convert the velocity of obstacles to the /map frame.
         * @param msg The Pointer to the nav_msgs::Odometry of the observing robot
         */
-        void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
-    };
+    void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
+  };
 
 }
 

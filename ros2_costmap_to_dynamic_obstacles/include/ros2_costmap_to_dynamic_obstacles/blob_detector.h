@@ -103,7 +103,7 @@ protected:
   virtual void findBlobs(const cv::Mat& image, const cv::Mat& binary_image, std::vector<Center>& centers,
                          std::vector<std::vector<cv::Point>>& cur_contours) const;
 
-  std::vector<std::vector<cv::Point>> contours_;
+  std::vector<std::vector<cv::Point>> contours_;  // A contour is a vector of points, contours_ is a vector of contours storing the contours in the whole image
 
   Params params_;
 };

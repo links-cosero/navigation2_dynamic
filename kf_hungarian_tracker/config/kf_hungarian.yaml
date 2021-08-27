@@ -1,6 +1,6 @@
 kf_hungarian_node:
   ros__parameters:
-    death_threshold: 3 # maximum mising frames before deleting an obstacle
+    death_threshold: 3 # maximum missing frames before deleting an obstacle
     global_frame: "camera_link" # none means camera frame is the global frame
     # Kamlan filter related
     top_down: False # whether use top-down (x, y) view or 3D (x, y, z)
