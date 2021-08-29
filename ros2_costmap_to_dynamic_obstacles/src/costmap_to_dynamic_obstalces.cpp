@@ -8,8 +8,6 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <opencv2/imgproc.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 
 namespace my_costmap_converter
 {
@@ -107,6 +105,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
   blob_det_ = BlobDetector::create(blob_det_params);
 #pragma endregion
   
+  nh_ = nh;
 }
 
 void CostmapToDynamicObstacles::compute()
@@ -139,7 +138,7 @@ void CostmapToDynamicObstacles::compute()
   //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
   ObstacleArrayPtr obstacles(new nav2_dynamic_msgs::msg::ObstacleArray);
   // header.seq is automatically filled
-  obstacles->header.stamp = now();
+  obstacles->header.stamp = nh_->now();
   obstacles->header.frame_id = "/map"; //Global frame /map  
   
   // Here use OpenCV to generate bounding boxes of the detected polygons
@@ -154,10 +153,8 @@ void CostmapToDynamicObstacles::compute()
     obstacles->obstacles.emplace_back();
 
     // set obstacle ID (UUID)
-    unique_identifier_msgs::msg::UUID obstacle_ID;
-    boost::uuids::uuid u;
-    obstacle_ID = u;
-    obstacles->obstacles.back().uuid = obstacle_ID;
+    boost::uuids::uuid u;  // generate a uuid
+    obstacles->obstacles.back().uuid = toMsg(u);
 
     // convert bounding box to size
     geometry_msgs::msg::Vector3 size;
@@ -168,21 +165,21 @@ void CostmapToDynamicObstacles::compute()
 
     // set velocity to zero
     geometry_msgs::msg::Vector3 velocity;
-    velocity.x, velocity.y, velocity.z = 0;
+    velocity.x = velocity.y = velocity.z = 0;
     obstacles->obstacles.back().velocity = velocity;
 
     // set the position (the center location)
     geometry_msgs::msg::Point position;
-    position.at(i).x = keypoints_.at(i).pt.x;
-    position.at(i).y = keypoints_.at(i).pt.y;
-    position.at(i).z = 0; // Currently unused!
-    obstacles->obstacles.back().position = velocity;
+    position.x = keypoints_.at(i).pt.x;
+    position.y = keypoints_.at(i).pt.y;
+    position.z = 0; // Currently unused!
+    obstacles->obstacles.back().position = position;
 
     // Set confidence to 1 for the moment
     obstacles->obstacles.back().score = 1;
   }
 
-  updateObstacleContainer(obstacles)
+  updateObstacleContainer(obstacles);
 }
 
 
@@ -245,5 +242,6 @@ void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::Cons
   ego_vel_.y = vel.y();
   ego_vel_.z = vel.z();
 }
+
 
 }

@@ -90,7 +90,7 @@ class CostmapConversionNode : public rclcpp::Node {
 
   // Callback to publish on the /detection topic
   void publishCallback() {
-    my_costmap_converter::ObstacleArrayPtr obstacles =
+    my_costmap_converter::ObstacleArrayConstPtr obstacles =
          converter_->getObstacles();  // HERE PUBLISH THE MESSAGE AS DEFINED IN nav2_dynamic_msgs 
 
     if (!obstacles) return;

@@ -9,6 +9,8 @@
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <nav2_costmap_2d/costmap_2d.hpp>
 #include <nav2_costmap_2d/costmap_2d_ros.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 // OpenCV
 #include <cv_bridge/cv_bridge.h>
@@ -39,6 +41,8 @@ namespace my_costmap_converter
 
   //! Typedef for a shared dynamic obstacle container
   typedef nav2_dynamic_msgs::msg::ObstacleArray::SharedPtr ObstacleArrayPtr;
+  //! Typedef for a shared dynamic obstacle container (read-only access)
+  typedef nav2_dynamic_msgs::msg::ObstacleArray::ConstSharedPtr ObstacleArrayConstPtr;
 
   class CostmapToDynamicObstacles
   {
@@ -67,7 +71,13 @@ namespace my_costmap_converter
    */
     virtual void setCostmap2D(nav2_costmap_2d::Costmap2D *costmap);
 
-   /**
+    /**
+   * @brief Get updated data from the previously set Costmap2D
+   * @sa setCostmap2D
+   */
+    virtual void updateCostmap2D();
+
+    /**
    * @brief Get a shared instance of the current obstacle container
    * @remarks If compute() or startWorker() has not been called before, this
    * method returns an empty instance!
@@ -83,6 +93,18 @@ namespace my_costmap_converter
    */
     void updateObstacleContainer(ObstacleArrayPtr obstacles);
 
+    /** @brief Create a UniqueID message from a UUID object.
+   *
+   *  @param uu boost::uuids::uuid object.
+   *  @returns uuid_msgs/UniqueID message.
+   */
+    static inline unique_identifier_msgs::msg::UUID toMsg(boost::uuids::uuid const &uu)
+    {
+      unique_identifier_msgs::msg::UUID msg;
+      std::copy(uu.begin(), uu.end(), msg.uuid.begin());
+      return msg;
+    }
+
   private:
     std::mutex mutex_;
     nav2_costmap_2d::Costmap2D *costmap_;
@@ -94,6 +116,7 @@ namespace my_costmap_converter
     std::vector<cv::KeyPoint> keypoints_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     Point_t ego_vel_;
+    rclcpp::Node::SharedPtr nh_;
 
     std::string odom_topic_ = "/odom";
     //   bool publish_static_obstacles_ = true;
