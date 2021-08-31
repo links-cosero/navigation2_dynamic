@@ -16,9 +16,11 @@ Finally it should publish an ObstacleArray message to the f_hungarian_tracker
 // #include <pluginlib/class_loader.hpp>
 
 
-class CostmapConversionNode : public rclcpp::Node {
- public:
-  CostmapConversionNode() : rclcpp::Node("costmap_converter_node") {
+class CostmapConversionNode : public rclcpp::Node 
+{
+public:
+  CostmapConversionNode() : Node("costmap_converter_node")
+  {
     // Create a pointer to handle the costmap
     costmap_ros_ =
         std::make_shared<nav2_costmap_2d::Costmap2DROS>("converter_costmap");
@@ -32,7 +34,7 @@ class CostmapConversionNode : public rclcpp::Node {
     costmap_ros_->on_activate(state);
 
     // Create a pointer to this node
-    n_ = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
+    // n_ = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node *) {});
 
     RCLCPP_INFO(get_logger(), "Created pointer to the costmap");
     
@@ -44,12 +46,6 @@ class CostmapConversionNode : public rclcpp::Node {
     get_parameter_or<std::string>("detection_topic", detection_topic,
                                   detection_topic);
 
-    // Creating the publisher to the /detection topic
-    // HERE MUST BE CHANGED IN ObstacleArrayMsg DEFINED IN THE nav2_dynamic_msgs
-    // FROM THE kf_hungarian_tracker PACKAGE
-    obstacle_pub_ =
-        create_publisher<costmap_converter_msgs::msg::ObstacleArrayMsg>(
-            detection_topic, 1000);
 
     // Parameter for??? Is it useful for backgound subtractor?? --> Verify
     occupied_min_value_ = 100;
@@ -74,16 +70,22 @@ class CostmapConversionNode : public rclcpp::Node {
 
     // do conversion here: call to costmap_to_dynamic_obstacles in order to activate
     // background_subtractor and blob_detector
-    converter_ =
-        std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>("converter");
+    // converter_ =
+    //     std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>;
     
       // Set the costmap and translate it to an openCV object
     converter_->initialize(std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter"));  // è necessario creare un nodo per il costmap converter?
     converter_->setCostmap2D(costmap_ros_->getCostmap());
     converter_->compute();
 
+    // Creating the publisher to the /detection topic
+    // HERE MUST BE CHANGED IN ObstacleArrayMsg DEFINED IN THE nav2_dynamic_msgs
+    // FROM THE kf_hungarian_tracker PACKAGE
+    obstacle_pub_ = this->create_publisher<nav2_dynamic_msgs::msg::ObstacleArray>(
+            detection_topic, 1000);
+
     // Create timer for publishing on the /detection topic
-    pub_timer_ = n_->create_wall_timer(
+    pub_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(200),
         std::bind(&CostmapConversionNode::publishCallback, this));
   }
@@ -201,13 +203,12 @@ class CostmapConversionNode : public rclcpp::Node {
   #pragma endregion
 
 
- private:
+private:
   rclcpp::Node::SharedPtr n_;
   std::shared_ptr<my_costmap_converter::CostmapToDynamicObstacles> converter_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<std::thread> costmap_thread_;
-  rclcpp::Publisher<nav2_dynamic_msgs::msg::ObstacleArray>::SharedPtr 
-      obstacle_pub_;
+  rclcpp::Publisher<nav2_dynamic_msgs::msg::ObstacleArray>::SharedPtr obstacle_pub_;
   // rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
   rclcpp::TimerBase::SharedPtr pub_timer_;
 
@@ -220,7 +221,7 @@ int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
 
   auto convert_process =
-      std::make_shared<CostmapConversionNode>("costmap_converter_node");
+      std::make_shared<CostmapConversionNode>();
 
   rclcpp::spin(convert_process);
 

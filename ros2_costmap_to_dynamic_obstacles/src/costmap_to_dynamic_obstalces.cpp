@@ -8,6 +8,7 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <opencv2/imgproc.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace my_costmap_converter
 {
@@ -198,7 +199,7 @@ void CostmapToDynamicObstacles::updateCostmap2D()
 {
   if (!costmap_->getMutex())
   {
-    RCLCPP_ERROR(getLogger(), "Cannot update costmap since the mutex pointer is null");
+    RCLCPP_ERROR(nh_->get_logger(), "Cannot update costmap since the mutex pointer is null");
     return;
   }
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*costmap_->getMutex());
@@ -224,7 +225,7 @@ void CostmapToDynamicObstacles::updateObstacleContainer(ObstacleArrayPtr obstacl
 
 void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg)     // callback function for the subscriber to the odom topic in the initilize() method
 {
-  RCLCPP_INFO_ONCE(getLogger(), "CostmapToDynamicObstacles: odom received.");
+  RCLCPP_INFO_ONCE(nh_->get_logger(), "CostmapToDynamicObstacles: odom received.");
 
   tf2::Quaternion pose;
   tf2::fromMsg(msg->pose.pose.orientation, pose);
