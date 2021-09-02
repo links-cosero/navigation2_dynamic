@@ -77,7 +77,8 @@ public:
     converter_ = std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>();
     if (converter_) {
       RCLCPP_INFO(get_logger(), "Created converter_ CostmapToDynamicObstacles class");
-      converter_->initialize(std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter"));  // è necessario creare un nodo per il costmap converter?
+      param_node_ = std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter");  // node for allowing dynamic reconfigure of parameters in rqt
+      converter_->initialize(param_node_);
       RCLCPP_INFO(get_logger(), "Costmap initialization completed");
       converter_->setCostmap2D(costmap_ros_->getCostmap());
       RCLCPP_INFO(get_logger(), "Costmap has been set");
@@ -112,6 +113,10 @@ public:
     // frame_id_ = costmap_ros_->getGlobalFrameID();
 
     // publishAsMarker(frame_id_, *obstacles);
+  }
+
+  std::shared_ptr<rclcpp::Node> getParamNodeHandle() {
+    return param_node_;
   }
 
   // The following has been commented out, since it should only serve to
@@ -214,7 +219,7 @@ public:
 
 
 private:
-  rclcpp::Node::SharedPtr n_;
+  std::shared_ptr<rclcpp::Node> param_node_;
   std::shared_ptr<my_costmap_converter::CostmapToDynamicObstacles> converter_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
   std::unique_ptr<std::thread> costmap_thread_;
@@ -233,7 +238,11 @@ int main(int argc, char **argv) {
   auto convert_process =
       std::make_shared<CostmapConversionNode>();
 
-  rclcpp::spin(convert_process);
+  //rclcpp::spin(convert_process);
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(convert_process);
+  exec.add_node(convert_process->getParamNodeHandle());
+  exec.spin();
 
   return 0;
 }
