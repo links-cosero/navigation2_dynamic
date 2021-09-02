@@ -50,7 +50,7 @@ namespace my_costmap_converter
     /**
       * @brief Destructor
       */
-    virtual ~CostmapToDynamicObstacles();
+    virtual ~CostmapToDynamicObstacles(){};
 
     /**
       * @brief Initialize the plugin
@@ -104,6 +104,13 @@ namespace my_costmap_converter
       std::copy(uu.begin(), uu.end(), msg.uuid.begin());
       return msg;
     }
+
+    /**
+    * @brief OpenCV Visualization
+    * @param name  Id/name of the opencv window
+    * @param image Image to be visualized
+    */
+    void visualize(const std::string &name, const cv::Mat &image);
 
   private:
     std::mutex mutex_;

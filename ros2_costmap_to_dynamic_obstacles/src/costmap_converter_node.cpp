@@ -73,10 +73,20 @@ public:
     // converter_ =
     //     std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>;
     
-      // Set the costmap and translate it to an openCV object
-    converter_->initialize(std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter"));  // è necessario creare un nodo per il costmap converter?
-    converter_->setCostmap2D(costmap_ros_->getCostmap());
-    converter_->compute();
+    // Set the costmap and translate it to an openCV object
+    converter_ = std::make_shared<my_costmap_converter::CostmapToDynamicObstacles>();
+    if (converter_) {
+      RCLCPP_INFO(get_logger(), "Created converter_ CostmapToDynamicObstacles class");
+      converter_->initialize(std::make_shared<rclcpp::Node>("intra_node", "my_costmap_converter"));  // è necessario creare un nodo per il costmap converter?
+      RCLCPP_INFO(get_logger(), "Costmap initialization completed");
+      converter_->setCostmap2D(costmap_ros_->getCostmap());
+      RCLCPP_INFO(get_logger(), "Costmap has been set");
+      converter_->compute();
+      RCLCPP_INFO(get_logger(), "Costmap conversion completed");
+    }
+    else{
+      RCLCPP_INFO(get_logger(), "converter_ pointer instantiation UNSUCCESSFULL");
+    }
 
     // Creating the publisher to the /detection topic
     // HERE MUST BE CHANGED IN ObstacleArrayMsg DEFINED IN THE nav2_dynamic_msgs

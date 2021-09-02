@@ -16,6 +16,7 @@ namespace my_costmap_converter
 void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
 {
 
+  RCLCPP_INFO(nh->get_logger(), "Initialization started");
   ego_vel_.x = ego_vel_.y = ego_vel_.z = 0;
   costmap_ = nullptr;
 
@@ -24,6 +25,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
               odom_topic_,
               rclcpp::SystemDefaultsQoS(),
               std::bind(&CostmapToDynamicObstacles::odomCallback, this, std::placeholders::_1));
+  RCLCPP_INFO(nh->get_logger(), "Created subscription to odom topic");
 
   //////////////////////////////////  Foreground detection parameters  //////////////////////////////////
 #pragma region
@@ -107,6 +109,8 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
 #pragma endregion
   
   nh_ = nh;
+  //rclcpp::spin(nh_);
+  RCLCPP_INFO(nh->get_logger(), "Initialization finished.");
 }
 
 void CostmapToDynamicObstacles::compute()
@@ -125,15 +129,33 @@ void CostmapToDynamicObstacles::compute()
                                                                           coincide with the translation coordinate of the costmap
                                                                           wrt the global /map frame */
 
+  visualize("fg_mat", fg_mask_);
   // if no foreground object is detected, no ObstacleMsgs need to be published
-  if (fg_mask_.empty())
+  if (fg_mask_.empty()){
+    RCLCPP_INFO(nh_->get_logger(), "No foreground object is detected, no ObstacleMsgs need to be published.");
     return;
-
+  }
+    
 
   /////////////////////////////// Blob detection /////////////////////////////////////
   // Centers and contours of Blobs are detected
   blob_det_->detect(fg_mask_, keypoints_);  //std::vector<cv::KeyPoint> keypoints_; (in header file) is a vector of cv::KeyPoint data struct https://docs.opencv.org/4.5.2/d2/d29/classcv_1_1KeyPoint.html#details
   std::vector<std::vector<cv::Point>> contours = blob_det_->getContours();  // try to change this getContours() to get the centers and size of blobs
+
+
+  ///////////////////////////////////// Output ///////////////////////////////////////
+   
+  cv::Mat fg_mask_with_keypoints = cv::Mat::zeros(fg_mask_.size(), CV_8UC3);
+  cv::cvtColor(fg_mask_, fg_mask_with_keypoints, cv::COLOR_GRAY2BGR);
+
+  for (size_t i = 0; i < contours.size(); ++i)
+    cv::rectangle(fg_mask_with_keypoints, cv::boundingRect(contours[i]),
+                  cv::Scalar(0, 0, 255), 1);
+
+  visualize("fgMaskWithKeyPoints", fg_mask_with_keypoints);
+  cv::imwrite("/home/matteodr/Pictures/fgMask.png", fg_mask_);
+  cv::imwrite("/home/matteodr/Pictures/fgMaskWithKeyPoints.png", fg_mask_with_keypoints);
+  
 
 
   //////////////////////////// Fill ObstacleContainerPtr /////////////////////////////
@@ -181,6 +203,7 @@ void CostmapToDynamicObstacles::compute()
   }
 
   updateObstacleContainer(obstacles);
+
 }
 
 
@@ -244,5 +267,15 @@ void CostmapToDynamicObstacles::odomCallback(const nav_msgs::msg::Odometry::Cons
   ego_vel_.z = vel.z();
 }
 
+void CostmapToDynamicObstacles::visualize(const std::string& name, const cv::Mat& image)
+{
+  if (!image.empty())
+  {
+    cv::Mat im = image.clone();
+    cv::flip(im, im, 0);
+    cv::imshow(name, im);
+    cv::waitKey(1);
+  }
+}
 
 }
