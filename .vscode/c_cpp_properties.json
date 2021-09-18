@@ -8,7 +8,10 @@
                 "/opt/ros/foxy/include",
                 "${workspaceFolder}/ros2_costmap_to_dynamic_obstacles/include",
                 "~/nav2_ws/src/navigation2/nav2_costmap_2d/include",
-                "~/ros2_ws/build/nav2_dynamic_msgs/**"
+                "~/nav2_ws/install/nav2_costmap_2d/include/nav2_costmap_2d/costmap_subscriber.hpp",
+                "~/ros2_ws/build/nav2_dynamic_msgs/**",
+                "~/nav2_ws/build/**",
+                "~/nav2_ws/src/navigation2/nav2_msgs/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

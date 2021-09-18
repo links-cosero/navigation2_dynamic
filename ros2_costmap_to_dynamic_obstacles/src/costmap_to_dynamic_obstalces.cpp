@@ -129,7 +129,6 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
 #pragma endregion
   
   nh_ = nh;
-  //rclcpp::spin(nh_);
   RCLCPP_INFO(nh->get_logger(), "Initialization finished.");
 }
 
@@ -149,12 +148,12 @@ void CostmapToDynamicObstacles::compute()
                                                                           coincide with the translation coordinate of the costmap
                                                                           wrt the global /map frame */
 
-  visualize("fg_mat", fg_mask_);
+  //visualize("fg_mat", fg_mask_);
   // if no foreground object is detected, no ObstacleMsgs need to be published
-  if (fg_mask_.empty()){
-    RCLCPP_INFO(nh_->get_logger(), "No foreground object is detected, no ObstacleMsgs need to be published.");
-    return;
-  }
+  // if (fg_mask_.empty()){
+  //   RCLCPP_INFO(nh_->get_logger(), "No foreground object is detected, no ObstacleMsgs need to be published.");
+  //   return;
+  // }
     
 
   /////////////////////////////// Blob detection /////////////////////////////////////
@@ -165,16 +164,16 @@ void CostmapToDynamicObstacles::compute()
 
   ///////////////////////////////////// Output ///////////////////////////////////////
    
-  cv::Mat fg_mask_with_keypoints = cv::Mat::zeros(fg_mask_.size(), CV_8UC3);
-  cv::cvtColor(fg_mask_, fg_mask_with_keypoints, cv::COLOR_GRAY2BGR);
+  // cv::Mat fg_mask_with_keypoints = cv::Mat::zeros(fg_mask_.size(), CV_8UC3);
+  // cv::cvtColor(fg_mask_, fg_mask_with_keypoints, cv::COLOR_GRAY2BGR);
 
-  for (size_t i = 0; i < contours.size(); ++i)
-    cv::rectangle(fg_mask_with_keypoints, cv::boundingRect(contours[i]),
-                  cv::Scalar(0, 0, 255), 1);
+  // for (size_t i = 0; i < contours.size(); ++i)
+  //   cv::rectangle(fg_mask_with_keypoints, cv::boundingRect(contours[i]),
+  //                 cv::Scalar(0, 0, 255), 1);
 
-  visualize("fgMaskWithKeyPoints", fg_mask_with_keypoints);
-  cv::imwrite("/home/matteodr/Pictures/fgMask.png", fg_mask_);
-  cv::imwrite("/home/matteodr/Pictures/fgMaskWithKeyPoints.png", fg_mask_with_keypoints);
+  // visualize("fgMaskWithKeyPoints", fg_mask_with_keypoints);
+  // cv::imwrite("/home/matteodr/Pictures/fgMask.png", fg_mask_);
+  // cv::imwrite("/home/matteodr/Pictures/fgMaskWithKeyPoints.png", fg_mask_with_keypoints);
   
 
 
@@ -191,7 +190,7 @@ void CostmapToDynamicObstacles::compute()
   for (size_t i = 0; i < contours.size(); ++i)
   {
     // create a bounding box for each obstacle
-    boundRect[i] = boundingRect( contours[i] );
+    boundRect[i] = boundingRect( getContour(contours[i]) );
 
     obstacles->obstacles.emplace_back();
 
@@ -201,8 +200,8 @@ void CostmapToDynamicObstacles::compute()
 
     // convert bounding box to size
     geometry_msgs::msg::Vector3 size;
-    size.x = boundRect[i].width;
-    size.y = boundRect[i].height;
+    size.x = boundRect[i].width; //*costmap_->getResolution();
+    size.y = boundRect[i].height; //*costmap_->getResolution();
     size.z = 0;
     obstacles->obstacles.back().size = size;
 
@@ -213,8 +212,8 @@ void CostmapToDynamicObstacles::compute()
 
     // set the position (the center location)
     geometry_msgs::msg::Point position;
-    position.x = keypoints_.at(i).pt.x;
-    position.y = keypoints_.at(i).pt.y;
+    position.x = keypoints_.at(i).pt.x*costmap_->getResolution() + costmap_->getOriginX();
+    position.y = keypoints_.at(i).pt.y*costmap_->getResolution() + costmap_->getOriginY();
     position.z = 0; // Currently unused!
     obstacles->obstacles.back().position = position;
 
@@ -247,9 +246,7 @@ void CostmapToDynamicObstacles::updateCostmap2D()
   }
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*costmap_->getMutex());
 
-  // Initialize costmapMat_ directly with the unsigned char array of costmap_
-  //costmap_mat_ = cv::Mat(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), CV_8UC1,
-  //                      costmap_->getCharMap()).clone(); // Deep copy: TODO
+  // Translate the costmap into a cv::Mat object
   costmap_mat_ = cv::Mat(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), CV_8UC1,
                         costmap_->getCharMap());          // CV_8UC1 is the array type: a 8-bit single channel image. 
 }
@@ -258,6 +255,22 @@ ObstacleArrayConstPtr CostmapToDynamicObstacles::getObstacles()
 {
   std::lock_guard<std::mutex> lock(mutex_);
   return obstacles_;
+}
+
+std::vector<cv::Point> CostmapToDynamicObstacles::getContour(std::vector<cv::Point>& contour)
+{
+  // contour [px] * costmapResolution [m/px] = contour [m]
+  std::vector<cv::Point> contour2i;
+
+  Point_t costmap_origin(costmap_->getOriginX(), costmap_->getOriginY(), 0);
+
+  for (std::size_t i = 0; i < contour.size(); ++i)
+  {
+    contour2i.emplace_back();
+    contour2i.back().x = contour.at(i).x*costmap_->getResolution() + costmap_origin.x;
+    contour2i.back().y = contour.at(i).y*costmap_->getResolution() + costmap_origin.y;
+  }
+  return contour2i;
 }
 
 void CostmapToDynamicObstacles::updateObstacleContainer(ObstacleArrayPtr obstacles)

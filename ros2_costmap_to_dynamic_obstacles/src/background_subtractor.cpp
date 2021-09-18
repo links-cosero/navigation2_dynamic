@@ -18,6 +18,7 @@ BackgroundSubtractor::BackgroundSubtractor(const Params &parameters): params_(pa
 void BackgroundSubtractor::apply(const cv::Mat& image, cv::Mat& fg_mask, int shift_x, int shift_y)
 {
   current_frame_ = image;
+  // cv::imwrite("/home/matteodr/Pictures/currentFrame.png", current_frame_);
 
   // occupancy grids are empty only once in the beginning -> initialize variables
   if (occupancy_grid_fast_.empty() && occupancy_grid_slow_.empty())
@@ -72,15 +73,15 @@ void BackgroundSubtractor::apply(const cv::Mat& image, cv::Mat& fg_mask, int shi
   cv::threshold(nearest_neighbor_mean_slow, nearest_neighbor_mean_slow, params_.max_occupancy_neighbors, 255, cv::THRESH_BINARY_INV);
   cv::bitwise_and(nearest_neighbor_mean_slow, fg_mask, fg_mask);    // this finally computes the foreground mask fg_mask 
 
-  //visualize("Current frame", currentFrame_);
+  // visualize("Current frame", current_frame_);
   cv::Mat setBorderToZero = cv::Mat(current_frame_.size(), CV_8UC1, 0.0);
   int border = 5;
   setBorderToZero(cv::Rect(border, border, current_frame_.cols-2*border, current_frame_.rows-2*border)) = 255;
 
   cv::bitwise_and(setBorderToZero, fg_mask, fg_mask);
 
-  // cv::imwrite("/home/albers/Desktop/currentFrame.png", currentFrame_);
-  // visualize("Foreground mask", fgMask);
+  // cv::imwrite("/home/matteodr/Pictures/currentFrame.png", current_frame_);
+  // visualize("Foreground mask", fg_mask);
 
   /* Closing Operation: A sequence of erosion and dilation on the binary map results in a closing operation
 which reduces noise in the foreground map */

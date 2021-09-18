@@ -86,6 +86,14 @@ namespace my_costmap_converter
     ObstacleArrayConstPtr getObstacles();
 
     /**
+   * @brief Gets the last observed contour of a object and converts it from [px]
+   * to [m]
+   * @return contour2i vector of Point_t, which represents the last observed contour in [m]
+   *             in x,y,z coordinates
+   */
+    std::vector<cv::Point> getContour(std::vector<cv::Point>& contour);
+
+    /**
    * @brief Thread-safe update of the internal obstacle container (that is
    * shared using getObstacles() from outside this
    * class)
