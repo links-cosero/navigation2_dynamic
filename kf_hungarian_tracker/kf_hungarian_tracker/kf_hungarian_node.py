@@ -38,7 +38,7 @@ class KFHungarianTracker(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('global_frame', "camera_link"),
+                ('global_frame', None),
                 ('process_noise_cov', [2., 2., 0.5]),
                 ('top_down', False),
                 ('death_threshold', 3),
@@ -80,6 +80,8 @@ class KFHungarianTracker(Node):
     def callback(self, msg):
         '''callback function for detection result'''
 
+        self.get_logger().info("starting callback.")
+
         # update delta time
         dt = (msg.header.stamp.sec - self.sec) + (msg.header.stamp.nanosec - self.nanosec) / 1e9
         self.sec = msg.header.stamp.sec
@@ -89,6 +91,8 @@ class KFHungarianTracker(Node):
         detections = msg.obstacles
         num_of_detect = len(detections)
         num_of_obstacle = len(self.obstacle_list)
+
+        self.get_logger().info("Copied obstacles from message into 'detections'.")
 
         # kalman predict
         for obj in self.obstacle_list:
@@ -123,6 +127,7 @@ class KFHungarianTracker(Node):
             for j in range(num_of_detect):
                 cost[i, j] = self.obstacle_list[i].distance(detections[j])
         obs_ind, det_ind = linear_sum_assignment(cost)
+        self.get_logger().info("Solved Hungarian matching.")
 
         # filter assignment according to cost
         new_obs_ind = []
@@ -133,6 +138,7 @@ class KFHungarianTracker(Node):
                 new_det_ind.append(d)
         obs_ind = new_obs_ind
         det_ind = new_det_ind
+        self.get_logger().info("Filter assignemnts according to costs.")
 
         # kalman update
         for o, d in zip(obs_ind, det_ind):
@@ -167,7 +173,7 @@ class KFHungarianTracker(Node):
             marker_list = []
             # add current active obstacles
             for obs in filtered_obstacle_list:
-                obstacle_uuid = uuid.UUID(bytes=bytes(obs.msg.uuid.uuid))
+                obstacle_uuid = uuid.UUID(bytes=bytes(obs.msg.id.uuid))
                 (r, g, b) = colorsys.hsv_to_rgb(obstacle_uuid.int % 360 / 360., 1., 1.) # encode id with rgb color
                 # make a cube 
                 marker = Marker()
@@ -205,15 +211,15 @@ class KFHungarianTracker(Node):
                 arrow.scale.z = 0.05
                 marker_list.append(arrow)
             # add dead obstacles to delete in rviz
-            for uuid in dead_object_list:
+            for uuid_ in dead_object_list:
                 marker = Marker()
                 marker.header = msg.header
-                marker.ns = str(uuid)
+                marker.ns = str(uuid_)
                 marker.id = 0
                 marker.action = 2 # delete
                 arrow = Marker()
                 arrow.header = msg.header
-                arrow.ns = str(uuid)
+                arrow.ns = str(uuid_)
                 arrow.id = 1
                 arrow.action = 2
                 marker_list.append(marker)
@@ -227,6 +233,7 @@ class KFHungarianTracker(Node):
             if det not in det_ind:
                 obstacle = ObstacleClass(detections[det], self.top_down, self.measurement_noise_cov, self.error_cov_post, self.process_noise_cov)
                 self.obstacle_list.append(obstacle)
+                self.get_logger().info("Birth of a new obstacle.")
 
     def death(self, obj_ind, num_of_obstacle):
         '''count obstacles' missing frames and delete when reach threshold'''
@@ -242,8 +249,9 @@ class KFHungarianTracker(Node):
             if self.obstacle_list[obs].dying < self.death_threshold:
                 new_object_list.append(self.obstacle_list[obs])
             else:
-                obstacle_uuid = uuid.UUID(bytes=bytes(self.obstacle_list[obs].msg.uuid.uuid))
+                obstacle_uuid = uuid.UUID(bytes=bytes(self.obstacle_list[obs].msg.id.uuid))
                 dead_object_list.append(obstacle_uuid)
+                self.get_logger().info("Death of an obstacle.")
         
         # add newly born obstacles
         for obs in range(num_of_obstacle, len(self.obstacle_list)):

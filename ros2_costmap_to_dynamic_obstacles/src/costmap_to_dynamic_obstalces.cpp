@@ -148,8 +148,8 @@ void CostmapToDynamicObstacles::compute()
                                                                           coincide with the translation coordinate of the costmap
                                                                           wrt the global /map frame */
 
-  //visualize("fg_mat", fg_mask_);
-  // if no foreground object is detected, no ObstacleMsgs need to be published
+  visualize("fg_mat", fg_mask_);
+  //if no foreground object is detected, no ObstacleMsgs need to be published
   // if (fg_mask_.empty()){
   //   RCLCPP_INFO(nh_->get_logger(), "No foreground object is detected, no ObstacleMsgs need to be published.");
   //   return;
@@ -196,7 +196,7 @@ void CostmapToDynamicObstacles::compute()
 
     // set obstacle ID (UUID)
     boost::uuids::uuid u;  // generate a uuid
-    obstacles->obstacles.back().uuid = toMsg(u);
+    obstacles->obstacles.back().id = toMsg(u);
 
     // convert bounding box to size
     geometry_msgs::msg::Vector3 size;
@@ -247,9 +247,42 @@ void CostmapToDynamicObstacles::updateCostmap2D()
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*costmap_->getMutex());
 
   // Translate the costmap into a cv::Mat object
-  costmap_mat_ = cv::Mat(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), CV_8UC1,
+  costmap_mat_ = cv::Mat(costmap_->getSizeInCellsY(), costmap_->getSizeInCellsX(), CV_8UC1,
                         costmap_->getCharMap());          // CV_8UC1 is the array type: a 8-bit single channel image. 
+  visualize("costmap_mat_", costmap_mat_);
 }
+
+// void CostmapToDynamicObstacles::updateCostmap2D(){
+//   // m_mapInfo = grid_map->info;
+//   // m_frameId = grid_map->header.frame_id;
+//   // allocate map structs so that x/y in the world correspond to x/y in the image
+//   // (=> cv::Mat is rotated by 90 deg, because it's row-major!)
+//   costmap_mat_ = cv::Mat(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), CV_8UC1);
+//   // m_distMap = cv::Mat(m_binaryMap.size(), CV_32FC1);
+
+//   unsigned char* mapDataIter = costmap_->getCharMap();
+
+//   //TODO check / param
+//   unsigned char map_occ_thres = 160;
+
+//   // iterate over map, store in image
+//   // (0,0) is lower left corner of OccupancyGrid
+//   for(unsigned int j = 0; j < costmap_->getSizeInCellsX(); ++j){
+//     for(unsigned int i = 0; i < costmap_->getSizeInCellsY(); ++i){
+//       if (*mapDataIter > map_occ_thres) {
+//         costmap_mat_.at<uchar>(i,j) = 255;
+//       } 
+//       else{
+//         costmap_mat_.at<uchar>(i,j) = 0;
+//       }
+//       ++mapDataIter;
+//     }
+//   }
+
+//   visualize("costmap_mat_", costmap_mat_);
+//   //RCLCPP_INFO("GridMap2D created with %d x %d cells at %f resolution.", costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY(), costmap_->getResolution());
+// }
+
 
 ObstacleArrayConstPtr CostmapToDynamicObstacles::getObstacles()
 {

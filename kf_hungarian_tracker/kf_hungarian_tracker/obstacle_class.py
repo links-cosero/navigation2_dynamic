@@ -21,7 +21,7 @@ class ObstacleClass:
 
         uuid_msg = UUID()
         uuid_msg.uuid = list(uuid.uuid4().bytes)
-        self.msg.uuid = uuid_msg
+        self.msg.id = uuid_msg
         
         position = np.array([[obstacle_msg.position.x, obstacle_msg.position.y, obstacle_msg.position.z]]).T # shape 3*1
         velocity = np.array([[obstacle_msg.velocity.x, obstacle_msg.velocity.y, obstacle_msg.velocity.z]]).T

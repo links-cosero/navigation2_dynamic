@@ -199,7 +199,7 @@ public:
       box.markers.emplace_back();
       box.markers.back().header.frame_id = frame_id;
       box.markers.back().header.stamp = now();
-      box.markers.back().lifetime = rclcpp::Duration(200/1000);  // 200 millisec
+      //box.markers.back().lifetime = rclcpp::Duration(200*1000);  // 200 millisec
       box.markers.back().ns = "Obstacles Markers";
       box.markers.back().type = visualization_msgs::msg::Marker::CUBE;
       box.markers.back().action = visualization_msgs::msg::Marker::ADD;
