@@ -27,6 +27,9 @@ public:
 
     costmap_ros_->set_parameter(rclcpp::Parameter("always_send_full_costmap", true)); 
     costmap_ros_->set_parameter(rclcpp::Parameter("publish_frequency", 5.0));
+    costmap_ros_->set_parameter(rclcpp::Parameter("resolution", 0.5));
+    //costmap_ros_->set_parameter(rclcpp::Parameter("inflation_layer.inflation_radius", 0.30));
+    costmap_ros_->declare_parameter( "inflation_layer.inflation_radius", rclcpp::ParameterValue(0.30));
     
     costmap_ros_->declare_parameter( "obstacle_layer.observation_sources", rclcpp::ParameterValue(std::string("scan")));
     costmap_ros_->declare_parameter( "obstacle_layer.scan.clearing", rclcpp::ParameterValue(true)); 
@@ -87,14 +90,12 @@ public:
     }
 
     // Creating the publisher to the /detection topic
-    // HERE MUST BE CHANGED IN ObstacleArrayMsg DEFINED IN THE nav2_dynamic_msgs
-    // FROM THE kf_hungarian_tracker PACKAGE
     obstacle_pub_ = this->create_publisher<nav2_dynamic_msgs::msg::ObstacleArray>(
             detection_topic, 1000);
 
     // Create timer for publishing on the /detection topic
     pub_timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(200),
+        std::chrono::milliseconds(150),
         std::bind(&CostmapConversionNode::publishCallback, this));
 
     // Same here for the polygon marker topic   
@@ -136,9 +137,7 @@ public:
     return param_node_;
   }
 
-  // The following has been commented out, since it should only serve to
-  // publish the costmap_converter results on rviz, we only need to publish on the 
-  // /detection topic
+  // Publish the costmap_converter results on rviz as boxes bounding the detected obstacles
   void publishAsMarker(
       const std::string &frame_id,
       const nav2_dynamic_msgs::msg::ObstacleArray &obstacles) {

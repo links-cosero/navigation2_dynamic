@@ -70,7 +70,7 @@ class KFHungarianTracker(Node):
             10)
 
         # publisher for tracking result
-        self.tracker_obstacle_pub = self.create_publisher(ObstacleArray, 'tracking', 10)
+        self.tracker_obstacle_pub = self.create_publisher(ObstacleArray, 'local_costmap/tracking', 50)
         self.tracker_marker_pub = self.create_publisher(MarkerArray, 'marker', 10)
 
         # setup tf related
@@ -157,7 +157,7 @@ class KFHungarianTracker(Node):
                 filtered_obstacle_list.append(obs)
 
         # construct ObstacleArray
-        if self.tracker_obstacle_pub.get_subscription_count() > 0:
+        if True:#self.tracker_obstacle_pub.get_subscription_count() > 0:
             obstacle_array = ObstacleArray()
             obstacle_array.header = msg.header
             track_list = []

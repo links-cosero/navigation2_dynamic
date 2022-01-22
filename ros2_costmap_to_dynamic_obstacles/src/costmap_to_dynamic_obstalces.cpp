@@ -43,7 +43,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
   nh->declare_parameter("beta", rclcpp::ParameterValue(bg_sub_params.beta ));
   nh->get_parameter_or<double>("beta", bg_sub_params.beta, bg_sub_params.beta);
 
-  bg_sub_params.min_occupancy_probability = 180;
+  bg_sub_params.min_occupancy_probability = 120;  //180
   nh->declare_parameter("min_occupancy_probability", rclcpp::ParameterValue(bg_sub_params.min_occupancy_probability));
   nh->get_parameter_or<double>("min_occupancy_probability", bg_sub_params.min_occupancy_probability, bg_sub_params.min_occupancy_probability);
 
@@ -51,7 +51,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
   nh->declare_parameter("min_sep_between_fast_and_slow_filter", rclcpp::ParameterValue(bg_sub_params.min_sep_between_fast_and_slow_filter ));
   nh->get_parameter_or<double>("min_sep_between_slow_and_fast_filter", bg_sub_params.min_sep_between_fast_and_slow_filter, bg_sub_params.min_sep_between_fast_and_slow_filter);
 
-  bg_sub_params.max_occupancy_neighbors = 100;
+  bg_sub_params.max_occupancy_neighbors = 200;  //100
   nh->declare_parameter("max_occupancy_neighbors", rclcpp::ParameterValue(bg_sub_params.max_occupancy_neighbors));
   nh->get_parameter_or<double>("max_occupancy_neighbors", bg_sub_params.max_occupancy_neighbors, bg_sub_params.max_occupancy_neighbors);
 
@@ -85,7 +85,7 @@ void CostmapToDynamicObstacles::initialize(rclcpp::Node::SharedPtr nh)
   nh->declare_parameter("min_area", rclcpp::ParameterValue(blob_det_params.minArea));
   nh->get_parameter_or<float>("min_area", blob_det_params.minArea, blob_det_params.minArea);
 
-  blob_det_params.maxArea = 300;
+  blob_det_params.maxArea = 500;  //300
   nh->declare_parameter("max_area", rclcpp::ParameterValue(blob_det_params.maxArea));
   nh->get_parameter_or<float>("max_area", blob_det_params.maxArea, blob_det_params.maxArea);
 
