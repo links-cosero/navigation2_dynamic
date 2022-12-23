@@ -181,7 +181,7 @@ void CostmapToDynamicObstacles::compute()
   ObstacleArrayPtr obstacles(new nav2_dynamic_msgs::msg::ObstacleArray);
   // header.seq is automatically filled
   obstacles->header.stamp = nh_->now();
-  obstacles->header.frame_id = "/map"; //Global frame /map  
+  obstacles->header.frame_id = "map"; //Global frame /map  
   
   // Here use OpenCV to generate bounding boxes of the detected polygons
   // This makes the obstacles detection less accurate, but the kf_hungarian_tracker needs rectangular

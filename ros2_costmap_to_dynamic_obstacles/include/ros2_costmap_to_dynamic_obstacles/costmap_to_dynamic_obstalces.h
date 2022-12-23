@@ -33,6 +33,7 @@ typedef cv::Point3_<track_t> Point_t;
 #include <ros2_costmap_to_dynamic_obstacles/blob_detector.h>
 #include <nav2_dynamic_msgs/msg/obstacle_array.hpp>
 
+#include "unique_identifier_msgs/msg/uuid.hpp"
 // STL
 #include <memory>
 

@@ -38,7 +38,7 @@ class KFHungarianTracker(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('global_frame', None),
+                ('global_frame', ),
                 ('process_noise_cov', [2., 2., 0.5]),
                 ('top_down', False),
                 ('death_threshold', 3),
@@ -99,7 +99,7 @@ class KFHungarianTracker(Node):
             obj.predict(dt)
 
         # transform to global frame
-        if self.global_frame is not None:
+        """ if self.global_frame is not None:
             try:
                 trans = self.tf_buffer.lookup_transform(self.global_frame, msg.header.frame_id, rclpy.time.Time())
                 msg.header.frame_id = self.global_frame
@@ -119,7 +119,7 @@ class KFHungarianTracker(Node):
 
             except LookupException:
                 self.get_logger().info('fail to get tf from {} to {}'.format(msg.header.frame_id, self.global_frame))
-                return
+                return """
 
         # hungarian matching
         cost = np.zeros((num_of_obstacle, num_of_detect))

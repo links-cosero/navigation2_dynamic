@@ -72,8 +72,9 @@ GradientLayer::onInitialize()
   declareParameter("enabled", rclcpp::ParameterValue(true));
   declareParameter("cost_scaling_factor", rclcpp::ParameterValue(10.0));
 
-  node_->get_parameter(name_ + "." + "enabled", enabled_);
-  node_->get_parameter(name_ + "." + "cost_scaling_factor", cost_scaling_factor_);
+  auto node = node_.lock();
+  node->get_parameter(name_ + "." + "enabled", enabled_);
+  node->get_parameter(name_ + "." + "cost_scaling_factor", cost_scaling_factor_);
 
   need_recalculation_ = false;
   current_ = true;
@@ -147,6 +148,8 @@ GradientLayer::updateCosts(
     return;
   }
 
+  //std::cout << "[DEBUG]: Operative costs." << std::endl;
+
   // master_array - is a direct pointer to the resulting master_grid.
   // master_grid - is a resulting costmap combined from all layers.
   // By using this pointer all layers will be overwritten!
@@ -180,7 +183,7 @@ GradientLayer::updateCosts(
   obstacles = layered_costmap_->getDynamicObstacles();
   obs_frame = obstacles->header.frame_id;
   global_frame = layered_costmap_->getGlobalFrameID();
-  obs_frame = obs_frame.substr(1);
+  //obs_frame = obs_frame.substr(1);
 
   try
   {
@@ -244,10 +247,10 @@ GradientLayer::updateCosts(
     //find cell coordinates of pose in costmap
     master_grid.worldToMapNoBounds(obstacle_pos.x, obstacle_pos.y, cell_in_costmap_x, cell_in_costmap_y);
     
-    
-    
+        
     //if position is in the map, mark it in the map (put Gaussian cost values around position
     markDynamicObstacle(cell_in_costmap_x, cell_in_costmap_y, obstacle_angle, &master_grid, master_array, vel);
+
   }
 
 }
@@ -299,7 +302,7 @@ void GradientLayer::markDynamicObstacle(int obstacle_in_costmap_x, int obstacle_
 
     for(unsigned int i=x_map_min; i< (unsigned int)x_map_max; i++){
       for(unsigned int j=y_map_min; j< (unsigned int)y_map_max; j++){
-
+        
         unsigned char cost;
 
         //check if the cell is inside the lethal radius around obstacle
@@ -311,7 +314,6 @@ void GradientLayer::markDynamicObstacle(int obstacle_in_costmap_x, int obstacle_
         else{
 
           double gauss_ampl = calcGaussian(i*resolution, j*resolution, origin_ix*resolution, origin_iy*resolution, amplitude, variance_x_back, variance_y_back, variance_x_front, variance_y_front, angle, p_mot);
-
           cost = (unsigned char) gauss_ampl;
 
           //if the value is outside the cutoff value, set to zero
@@ -327,6 +329,7 @@ void GradientLayer::markDynamicObstacle(int obstacle_in_costmap_x, int obstacle_
         if(costmap_array[index]<cost) {
           costmap_array[index] = cost;
         }
+
       }
     }
   }

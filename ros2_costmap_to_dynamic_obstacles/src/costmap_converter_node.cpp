@@ -105,7 +105,7 @@ public:
     get_parameter_or<std::string>("obstacle_marker_topic", obstacle_marker_topic,
                                   obstacle_marker_topic); 
 
-    // Chage according to the message type!!
+    // Change according to the message type!!
     // marker_pub_ = create_publisher<geometry_msgs::msg::PointStamped>(
     //     obstacle_marker_topic, 10);
     marker_pub_ = create_publisher<visualization_msgs::msg::MarkerArray>(
@@ -126,7 +126,7 @@ public:
     if (!obstacles) return;
 
     obstacle_pub_->publish(*obstacles);
-    RCLCPP_INFO(get_logger(), "Detected obstacles: %0.0f", obstacles->obstacles.size());
+    RCLCPP_INFO(get_logger(), "Detected obstacles: %0.0f", (double) obstacles->obstacles.size());
 
     frame_id_ = costmap_ros_->getGlobalFrameID();
 
