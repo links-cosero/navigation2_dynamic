@@ -158,10 +158,10 @@ private:
   // Define the params for the Gaussian costs assignment
   double amplitude = 255; ///< amplitude multiplication factor for gaussian 255
   double cutoff_amplitude = 150; //240;//200; //150;//100; //0.1; ///< smallest cost value marked in map
-  double variance_x_back = 0.08;//0.3;//0.1;//0.05; ///< x variance for back gaussian function
-  double variance_y_back = 0.09;//0.7;//0.2;//0.09;//0.04; ///< y variance for back gaussian function
-  double variance_x_front = 0.25;//2.0;//0.7;//0.3;//0.15; ///< x variance for frontal gaussian function
-  double variance_y_front =  0.09;//0.7;//0.2;//0.09;//0.04;///< y variance for frontal gaussian function
+  double variance_x_back = 0.5;//0.3;//0.1;//0.05; ///< x variance for back gaussian function
+  double variance_y_back = 0.9;//0.7;//0.2;//0.09;//0.04; ///< y variance for back gaussian function
+  double variance_x_front = 2.0;//2.0;//0.7;//0.3;//0.15; ///< x variance for frontal gaussian function
+  double variance_y_front =  0.7;//0.7;//0.2;//0.09;//0.04;///< y variance for frontal gaussian function
   double lethal_radius = 0.2; ///< radius around humans with untraversible cost
   double offset_x_ = 0; ///< x offset of Gaussian peak and person center (to the front)   USE SIZE OF THE BOUNDING BOX INSTEAD!
   double offset_y_ =  0;///< y offset of Gaussian peak and person center (to the side)   USE SIZE OF THE BOUNDING BOX INSTEAD!
