@@ -3,9 +3,11 @@
 <package format="3">
   <name>nav2_gradient_costmap_plugin</name>
   <version>1.0.0</version>
-  <description>Run-time plugin for Costmap2D gradient later</description>
-  <maintainer email="mattederose@gmail.com">Alexey Merzlyakov</maintainer>
+  <description>Run-time plugin for Costmap2D gradient layer</description>
+  <maintainer email="alexey.merzlyakov@samsung.com">Alexey Merzlyakov</maintainer>
   <license>BSD-3-Clause</license>
+
+  <author email="matteo.derose@studenti.polito.it">Matteo De Rose</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
